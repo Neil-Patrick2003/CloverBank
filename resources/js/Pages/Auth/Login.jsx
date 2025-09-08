@@ -2,9 +2,12 @@ import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { User, Lock } from 'lucide-react';
+import { useState } from 'react';
+
+import InputWithIcon from '@/Components/InputWithIcon';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -13,9 +16,10 @@ export default function Login({ status, canResetPassword }) {
         remember: false,
     });
 
+    const [showPassword, setShowPassword] = useState(false);
+
     const submit = (e) => {
         e.preventDefault();
-
         post(route('login'), {
             onFinish: () => reset('password'),
         });
@@ -25,76 +29,120 @@ export default function Login({ status, canResetPassword }) {
         <GuestLayout>
             <Head title="Log in" />
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+            <div className="max-w-md mx-auto bg-white shadow-lg rounded-xl p-8 border">
+                <h1 className="text-2xl font-bold text-center text-emerald-600 mb-2">
+                    Welcome Back
+                </h1>
+                <p className="text-sm text-gray-500 text-center mb-6">
+                    Log in to access your account
+                </p>
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                {status && (
+                    <div className="mb-4 text-sm font-medium text-green-600 text-center">
+                        {status}
+                    </div>
+                )}
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
+                <form onSubmit={submit} className="space-y-5">
+                    {/* Email */}
+                    <div>
+                        <InputLabel htmlFor="email" value="Email" />
+                        <InputWithIcon
+                            icon={<User className="text-gray-400" />}
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="you@example.com"
+                            value={data.email}
+                            className="mt-1 block w-full bg-gray-50 text-gray-900 border-gray-300 rounded-lg focus:ring-emerald-500"
+                            autoComplete="username"
+                            onChange={(e) => setData('email', e.target.value)}
+                            required
                         />
-                        <span className="ms-2 text-sm text-gray-600">
-                            Remember me
-                        </span>
-                    </label>
-                </div>
+                        <InputError message={errors.email} className="mt-2" />
+                    </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
+                    {/* Password */}
+                    <div>
+                        <InputLabel htmlFor="password" value="Password" />
+                        <div className="relative">
+                            <InputWithIcon
+                                icon={<Lock className="text-gray-400" />}
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                placeholder="Enter your password"
+                                value={data.password}
+                                className="mt-1 block w-full bg-gray-50 text-gray-900 border-gray-300 rounded-lg focus:ring-emerald-500"
+                                autoComplete="current-password"
+                                onChange={(e) =>
+                                    setData('password', e.target.value)
+                                }
+                                required
+                            />
+                            <button
+                                type="button"
+                                aria-label="Toggle password visibility"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm text-gray-500 hover:text-emerald-600 transition"
+                                onClick={() =>
+                                    setShowPassword(!showPassword)
+                                }
+                            >
+                                {showPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
+                        <InputError
+                            message={errors.password}
+                            className="mt-2"
+                        />
+                    </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
+                    {/* Remember me & Forgot Password */}
+                    <div className="flex items-center justify-between text-sm">
+                        <label className="flex items-center">
+                            <Checkbox
+                                name="remember"
+                                checked={data.remember}
+                                onChange={(e) =>
+                                    setData('remember', e.target.checked)
+                                }
+                            />
+                            <span className="ml-2 text-gray-600">
+                                Remember me
+                            </span>
+                        </label>
+
+                        {canResetPassword && (
+                            <Link
+                                href={route('password.request')}
+                                className="text-emerald-600 hover:text-emerald-700 underline"
+                            >
+                                Forgot password?
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Submit */}
+                    <PrimaryButton
+                        className="w-full justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2.5"
+                        disabled={processing}
+                    >
                         Log in
                     </PrimaryButton>
-                </div>
-            </form>
+                </form>
+
+                {/* Extra: Sign up link */}
+                <p className="text-sm text-gray-500 text-center mt-6">
+                    Don’t have an account?{' '}
+                    <Link
+                        href={route('register')}
+                        className="text-emerald-600 hover:text-emerald-700 font-medium"
+                    >
+                        Register
+                    </Link>
+                </p>
+            </div>
         </GuestLayout>
     );
 }
+
