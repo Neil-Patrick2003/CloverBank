@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Head } from "@inertiajs/react";
-import { Home, User, Bell, Settings, Menu, X } from "lucide-react";
 import Sidebar, { SidebarItem } from "@/Components/Navbar/Navbar";
+import { Menu, X, Home, Users, User, Settings, Bell, UserRoundCog, HandCoins, Handshake, ArrowRightLeft } from "lucide-react";
 
 
 export default function AuthenticatedLayout({ children, header }) {
@@ -16,7 +16,14 @@ export default function AuthenticatedLayout({ children, header }) {
         <div className="hidden md:block">
           <Sidebar>
             <SidebarItem icon={<Home />} text="Home" active />
-            <SidebarItem icon={<User />} text="Profile" />
+            <SidebarItem icon={<Users />} text="Customer Management" />
+            <SidebarItem icon={<UserRoundCog />} text="Account Management"  />
+            <SidebarItem icon={<ArrowRightLeft />} text="Transaction Management"  />
+            <SidebarItem icon={<HandCoins />} text="Payments & Settlements"  />
+            <SidebarItem icon={<Handshake />} text="Loan & Credit Management"  />
+            <SidebarItem icon={<Handshake />} text="Security & Compliance"  />
+            <SidebarItem icon={<User />} text="Report & Analytics"  />
+            <SidebarItem icon={<Settings />} text="System Administration"  />
           </Sidebar>
         </div>
 
@@ -43,9 +50,16 @@ export default function AuthenticatedLayout({ children, header }) {
               <X className="w-5 h-5" />
             </button>
           </div>
+          haha
           <Sidebar>
-            <SidebarItem icon={<Home />} text="Home" active />
-            <SidebarItem icon={<User />} text="Profile"  />
+            <SidebarItem icon={<Home />} text="Dadsdsashboard" active />
+            <SidebarItem icon={<User />} text="Customer Management"  />
+            <SidebarItem icon={<User />} text="Transaction Management"  />
+            <SidebarItem icon={<User />} text="Payment & Settlement"  />
+            <SidebarItem icon={<User />} text="Loan and Credit Managent"  />
+            <SidebarItem icon={<User />} text="Security Compplience"  />
+            <SidebarItem icon={<User />} text="Report & Analytics"  />
+            <SidebarItem icon={<Settings />} text="System Adminitrator"  />
           </Sidebar>
         </div>
 

@@ -13,7 +13,7 @@ export default function Sidebar({ children }) {
   return (
     <aside
       className={`relative h-screen transition-all duration-300 ${
-        expanded ? "w-64" : "w-20"
+        expanded ? "w-72" : "w-20"
       }`}
     >
       <nav className="h-full flex flex-col bg-white border-r shadow-sm">
@@ -36,7 +36,7 @@ export default function Sidebar({ children }) {
         {/* Toggle button */}
         <button
             className={`absolute hidden md:block border p-1.5 rounded-full bg-emerald-600 text-white transition-all ${
-              expanded ? "left-60" : "left-16"
+              expanded ? "left-[268 px]" : "left-16"
             } top-3 shadow-lg hover:bg-emerald-700`}
             onClick={() => setExpanded((prev) => !prev)}
           >

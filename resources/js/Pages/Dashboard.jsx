@@ -9,7 +9,7 @@ export const Dashboard = () => {
   return (
     <AuthenticatedLayout>
         <h1 className="text-2xl font-semibold text-gray-800">Hello, {authUser.name}</h1>
-        <p className="mt-2 text-gray-600">Welcome to your dashboard!</p>
+        <p className="mt-2 text-gray-600">Welcome to your dashboard!</p> haha
     </AuthenticatedLayout>
   );
 };
