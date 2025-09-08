@@ -81,7 +81,7 @@ export function SidebarItem({ icon, text, active }) {
         ${expanded ? "px-3 py-2" : "py-3  justify-center"}
         ${
           active
-            ? "bg-emerald-100 text-emerald-700"
+            ? "bg-emerald-600 text-white"
             : "text-emerald-700 hover:bg-emerald-50"
         }
       `}

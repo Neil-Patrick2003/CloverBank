@@ -45,7 +45,7 @@ export default function AuthenticatedLayout({ children, header }) {
           </div>
           <Sidebar>
             <SidebarItem icon={<Home />} text="Home" active />
-            <SidebarItem icon={<User />} text="Profile" />
+            <SidebarItem icon={<User />} text="Profile"  />
           </Sidebar>
         </div>
 
