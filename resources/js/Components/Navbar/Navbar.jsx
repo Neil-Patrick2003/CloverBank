@@ -3,8 +3,19 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
+  Home,
+  Users,
+  User,
+  Settings,
+  Bell,
+  UserRoundCog,
+  HandCoins,
+  Handshake,
+  ArrowRightLeft,
 } from "lucide-react";
+import { Link, usePage } from "@inertiajs/react";
 
+// Context for sidebar state
 export const SidebarContext = createContext();
 
 export default function Sidebar({ children }) {
@@ -18,15 +29,15 @@ export default function Sidebar({ children }) {
     >
       <nav className="h-full flex flex-col bg-white border-r shadow-sm">
         {/* Header */}
-        <div className="p-4 mb-6  flex items-center">
+        <div className="p-4 mb-6 flex items-center">
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQemcyueB0yW6ah96fHEyuGB5O1ydYyequTFQ&s"
+            src="/images/logo.png"
             alt="Logo"
-            className="h-10 w-10 border"
+            className="h-10 w-10 border rounded-md"
           />
           <span
-            className={`ml-3 text-xl font-bold text-emerald-700 transition-all duration-300 ${
-              expanded ? "opacity-100" : "opacity-0 hidden overflow-hidden"
+            className={`ml-3 text-xl font-bold text-emerald-700 transition-all duration-300 overflow-hidden whitespace-nowrap ${
+              expanded ? "opacity-100 w-auto" : "opacity-0 w-0"
             }`}
           >
             Clover Bank
@@ -35,20 +46,21 @@ export default function Sidebar({ children }) {
 
         {/* Toggle button */}
         <button
-            className={`absolute hidden md:block border p-1.5 rounded-full bg-emerald-600 text-white transition-all ${
-              expanded ? "left-[268 px]" : "left-16"
-            } top-3 shadow-lg hover:bg-emerald-700`}
-            onClick={() => setExpanded((prev) => !prev)}
-          >
-            {expanded ? <ChevronLeft /> : <ChevronRight />}
-          </button>
+          aria-label="Toggle sidebar"
+          className={`absolute hidden md:block border p-1.5 rounded-full bg-emerald-600 text-white transition-all ${
+            expanded ? "left-[268px]" : "left-16"
+          } top-3 shadow-lg hover:bg-emerald-700`}
+          onClick={() => setExpanded((prev) => !prev)}
+        >
+          {expanded ? <ChevronLeft /> : <ChevronRight />}
+        </button>
 
         {/* Context Provider */}
         <SidebarContext.Provider value={{ expanded }}>
           <ul className="flex-1 px-3 space-y-1">{children}</ul>
         </SidebarContext.Provider>
 
-        {/* Footer */}
+        {/* Footer (user profile) */}
         <div className="border-t flex items-center p-3">
           <img
             src="https://i.pravatar.cc/300"
@@ -72,18 +84,21 @@ export default function Sidebar({ children }) {
   );
 }
 
-export function SidebarItem({ icon, text, active }) {
+export function SidebarItem({ icon, text, url }) {
   const { expanded } = useContext(SidebarContext);
+  const { url: currentUrl } = usePage(); // Get current route
+  const isActive = currentUrl.startsWith(url);
 
   return (
-    <li
+    <Link
+      href={`${url}`}
       className={`group relative flex items-center font-medium rounded-md cursor-pointer transition-all
-        ${expanded ? "px-3 py-2" : "py-3  justify-center"}
+        ${expanded ? "px-3 py-3" : "py-3 justify-center"}
         ${
-          active
+          isActive
             ? "bg-emerald-600 text-white"
             : "text-emerald-700 hover:bg-emerald-50"
-        }
+        }   
       `}
     >
       {/* Icon */}
@@ -104,6 +119,8 @@ export function SidebarItem({ icon, text, active }) {
           {text}
         </span>
       )}
-    </li>
+    </Link>
   );
 }
+
+
