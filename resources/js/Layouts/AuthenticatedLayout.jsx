@@ -16,7 +16,7 @@ export default function AuthenticatedLayout({ children, header }) {
         <div className="hidden md:block">
           <Sidebar>
             <SidebarItem icon={<Home />} url={'/dashboard'} text="Home" active />
-            <SidebarItem icon={<Users />} url={'/customers'} text="Customer Management" />
+            <SidebarItem icon={<Users />} url={'/admin/customers'} text="Customer Management" />
             <SidebarItem icon={<UserRoundCog />} url={'/users'} text="Account Management"  />
             <SidebarItem icon={<ArrowRightLeft />} url={'/transactions'}text="Transaction Management"  />
             <SidebarItem icon={<HandCoins />} url={'/paymenst'} text="Payments & Settlements"  />

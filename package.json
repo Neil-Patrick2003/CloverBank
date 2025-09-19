@@ -24,6 +24,7 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
+        "lodash": "^4.17.21",
         "lucide-react": "^0.542.0"
     }
 }
