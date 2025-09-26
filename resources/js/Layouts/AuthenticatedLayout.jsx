@@ -90,7 +90,7 @@ export default function AuthenticatedLayout({ children, header }) {
           </div>
 
           {/* Page Content */}
-            <div className="p-6">
+            <div className="h-screen overflow-auto p-6 bg-gray-50">
                 {children}
             </div>
 

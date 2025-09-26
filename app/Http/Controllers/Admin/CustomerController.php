@@ -53,7 +53,7 @@ class CustomerController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Admin/Customer/Create');
     }
 
     /**
@@ -61,7 +61,55 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'date_of_birth' => 'required|date|before:today',
+            'gender' => 'required|in:male,female,other',
+            'address' => 'required|string|max:255',
+            'occupation' => 'nullable|string|max:100',
+            'income_source' => 'nullable|string|max:100',
+            'email' => 'required|email|unique:users,email',
+            'phone_number' => 'required|string|regex:/^[0-9]{10,15}$/|unique:users,phone_number',
+            'username' => 'required|string|min:4|max:50|unique:users,username',
+            'account_type' => 'required|in:savings,current,fixed',
+            'password' => 'required|string|min:8|confirmed',
+            'initial_deposit' => 'required|numeric|min:100',
+            'status' => 'in:inactive,active',
+        ]);
+
+
+        // Create the user
+        $user = User::create([
+            
+            'email' => $validatedData['email'],
+            'phone_number' => $validatedData['phone_number'],
+            'username' => $validatedData['username'],
+            'role' => 'customer',
+            'status' => 'active', // or however you want to set the initial status
+            'password' => bcrypt($validatedData['password']),
+        ]);
+
+        // Create the customer profile
+        $customer = Customer::create([
+            'user_id' => $user->id,
+            'first_name' => $validatedData['first_name'],
+            'last_name' => $validatedData['last_name'],
+            'date_of_birth' => $request->input('date_of_birth'), 
+                        'gender' => $request->input['gender'],
+
+            'address' => $request->input('address'),
+            'id_type' => $request->input('id_type'),
+            'id_number' => $request->input('id_number'),
+            'occcupation' => $request->input('occupation'),
+            'income_source' => $request->input('source_of_funds'),
+            
+            // Add other customer-specific fields here
+        ]);
+
+        
+
+        return redirect()->route('customers')->with('success', 'Customer created successfully.');
     }
 
     /**

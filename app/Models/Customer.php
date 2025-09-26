@@ -16,4 +16,9 @@ class Customer extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
 }
