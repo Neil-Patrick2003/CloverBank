@@ -1,227 +1,314 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Link, router } from "@inertiajs/react";
-import React, { useCallback, useEffect } from "react";
-import { Download, SquarePen } from "lucide-react";
+import { Link, router, usePage } from "@inertiajs/react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Download, SquarePen, Loader2 } from "lucide-react";
 import { debounce } from "lodash";
 
-export default function Index({ users }) {
-    const [selectedSort, setSelectedSort] = React.useState("asc");
-    const [searchTerm, setSearchTerm] = React.useState("");
-    const [itemsPerPage, setItemsPerPage] = React.useState(5);
+/* ------------------------------ Small Utils ------------------------------ */
+const toNumber = (v, fallback = 10) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+const fmtDate = (iso) => {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("en-PH", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(iso));
+  } catch {
+    return iso;
+  }
+};
+const Badge = ({ children, tone = "gray" }) => {
+  const tones = {
+    gray: "bg-gray-100 text-gray-700 ring-gray-200",
+    green: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+    red: "bg-rose-100 text-rose-700 ring-rose-200",
+    blue: "bg-blue-100 text-blue-700 ring-blue-200",
+    amber: "bg-amber-100 text-amber-800 ring-amber-200",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${tones[tone] || tones.gray}`}>
+      {children}
+    </span>
+  );
+};
 
-    // Debounced search
-    const debouncedSearch = useCallback(
-        debounce((value) => {
-            router.get(
-                "/admin/customers",
-                {
-                    page: 1,
-                    search: value,
-                    perPage: itemsPerPage,
-                },
-                {
-                    preserveState: true,
-                    replace: true,
-                }
-            );
-        }, 500),
-        [selectedSort, itemsPerPage]
-    );
+export default function Index({ users, filters = {} }) {
+  // Hydrate initial from server (if you pass them back as props)
+  const initialSort = (filters.sort ?? "asc").toLowerCase() === "desc" ? "desc" : "asc";
+  const initialSearch = filters.search ?? "";
+  const initialPerPage = toNumber(filters.perPage ?? 10, 10);
 
-    useEffect(() => {
-        return () => {
-            debouncedSearch.cancel();
-        };
-    }, [debouncedSearch]);
+  const [selectedSort, setSelectedSort] = useState(initialSort);
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [itemsPerPage, setItemsPerPage] = useState(initialPerPage);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSearchTermChange = (value) => {
-        setSearchTerm(value);
-        debouncedSearch(value);
+  // Build a shared query object so all navigations are consistent
+  const query = useMemo(
+    () => ({
+      page: 1,
+      search: searchTerm || undefined,
+      perPage: itemsPerPage || undefined,
+      sort: selectedSort || undefined,
+    }),
+    [searchTerm, itemsPerPage, selectedSort]
+  );
+
+  // Debounced search that respects sort/perPage
+  const debouncedSearch = useRef(
+    debounce((nextValue, nextQuery) => {
+      router.get("/admin/customers", nextQuery, {
+        preserveState: true,
+        replace: true,
+        onStart: () => setIsLoading(true),
+        onFinish: () => setIsLoading(false),
+        preserveScroll: true,
+      });
+    }, 450)
+  ).current;
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
     };
+  }, [debouncedSearch]);
 
-    const handleSortChange = (value) => {
-        setSelectedSort(value);
-        router.get(
-            "/admin/customers",
-            {
-                page: 1,
-                search: searchTerm,
-                perPage: itemsPerPage,
-            },
-            {
-                preserveState: true,
-                replace: true,
-            }
-        );
-    };
+  const handleSearchTermChange = useCallback(
+    (value) => {
+      setSearchTerm(value);
+      debouncedSearch(value, { ...query, search: value || undefined });
+    },
+    [debouncedSearch, query]
+  );
 
-    const handlePerPageChange = (value) => {
-        setItemsPerPage(value);
-        router.get(
-            "/admin/customers",
-            {
-                page: 1,
-                search: searchTerm,
-                perPage: value,
-            },
-            {
-                preserveState: true,
-                replace: true,
-            }
-        );
-    };
+  const navigateWith = useCallback(
+    (next) => {
+      const merged = { ...query, ...next };
+      router.get("/admin/customers", merged, {
+        preserveState: true,
+        replace: true,
+        onStart: () => setIsLoading(true),
+        onFinish: () => setIsLoading(false),
+        preserveScroll: true,
+      });
+    },
+    [query]
+  );
 
-    return (
-        <AuthenticatedLayout>
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Customer Management</h1>
-                <Link
-                    href="/admin/customers/create"
-                    className="bg-emerald-500 rounded-md text-white px-4 py-2 hover:bg-emerald-600 transition"
-                >
-                    Add New Customer
-                </Link>
-            </div>
-            <p className="text-gray-500 mb-6">
-                View, manage, and update all registered customer accounts.
-            </p>
+  const handleSortChange = (value) => {
+    const v = value === "desc" ? "desc" : "asc";
+    setSelectedSort(v);
+    navigateWith({ sort: v });
+  };
 
-            {/* Filters */}
-            <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <select
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    value={selectedSort}
-                    className="border border-gray-300 rounded-md text-sm px-4 py-2"
-                >
-                    <option value="asc">Sort: Ascending</option>
-                    <option value="desc">Sort: Descending</option>
-                </select>
+  const handlePerPageChange = (value) => {
+    const v = toNumber(value, itemsPerPage);
+    setItemsPerPage(v);
+    navigateWith({ perPage: v });
+  };
 
-                <div className="flex items-center gap-2">
-                    <input
-                        id="search"
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => handleSearchTermChange(e.target.value)}
-                        placeholder="Search by name, email, or username..."
-                        className="border border-gray-300 rounded-md text-sm px-4 py-2"
-                    />
-                    <button className="border border-gray-300 py-2 px-2.5 rounded-md text-gray-500 hover:bg-gray-200 transition cursor-not-allowed">
-                        <Download className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
+  // Compute export URL (server should stream CSV)
+  const exportUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("search", searchTerm);
+    if (selectedSort) params.set("sort", selectedSort);
+    if (itemsPerPage) params.set("perPage", String(itemsPerPage));
+    return `/admin/customers/export?${params.toString()}`;
+  }, [searchTerm, selectedSort, itemsPerPage]);
 
-            {/* Table */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[60vh] bg-white scrollbar-thumb-gray-300 scrollbar-track-transparent rounded-t-lg">
-                <table className="min-w-full divide-y border-b divide-gray-200 text-gray-700">
-                    <thead className="bg-gray-100 text-sm text-gray-500 uppercase tracking-wide hidden md:table-header-group sticky top-0 z-20">
-                        <tr>
-                            <th className="p-3 text-start rounded-tl-lg">Id</th>
-                            <th className="p-3 text-start">Last Name</th>
-                            <th className="p-3 text-start">First Name</th>
-                            <th className="p-3 text-start">Username</th>
-                            <th className="p-3 text-start">Email</th>
-                            <th className="p-3 text-start">Phone Number</th>
-                            <th className="p-3 text-start">Role</th>
-                            <th className="p-3 text-start">Status</th>
-                            <th className="p-3 text-start">Joined at</th>
-                            <th className="p-3 text-start">Action</th>
-                        </tr>
-                    </thead>
+  return (
+    <AuthenticatedLayout>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Customer Management</h1>
+          <p className="text-gray-500">View, manage, and update all registered customer accounts.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={exportUrl}
+            className="inline-flex items-center gap-2 border rounded-md px-3 py-2 text-sm hover:bg-gray-50 transition"
+            aria-label="Export customers to CSV"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </a>
+          <Link
+            href="/admin/customers/create"
+            className="inline-flex items-center rounded-md bg-emerald-600 text-white px-3 py-2 text-sm hover:bg-emerald-700 transition"
+          >
+            Add New Customer
+          </Link>
+        </div>
+      </div>
 
-                    <tbody className="divide-y divide-dashed">
-                        {users?.data?.length > 0 ? (
-                            users.data.map((user) => (
-                                <tr
-                                    key={user.id}
-                                    className="flex flex-col md:table-row hover:bg-gray-50"
-                                >
-                                    <td className="p-3 md:table-cell">{user?.id}</td>
-                                    <td className="p-3 md:table-cell">
-                                        {user?.customer?.last_name}
-                                    </td>
-                                    <td className="p-3 md:table-cell">
-                                        {user?.customer?.first_name}
-                                    </td>
-                                    <td className="p-3 md:table-cell">{user.username}</td>
-                                    <td className="p-3 md:table-cell">{user.email}</td>
-                                    <td className="p-3 md:table-cell">{user.phone_number}</td>
-                                    <td className="p-3 md:table-cell">{user.role}</td>
-                                    <td className="p-3 md:table-cell">{user.status}</td>
-                                    <td className="p-3 md:table-cell">{user.created_at}</td>
-                                    <td className="p-3 md:table-cell">
-                                        <Link
-                                            href={`/admin/customers/${user.id}/edit`}
-                                            className="inline-flex"
-                                        >
-                                            <SquarePen className="w-4 h-4 text-blue-500 hover:text-blue-600 cursor-pointer" />
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td
-                                    className="p-6 text-center text-gray-500"
-                                    colSpan="10"
-                                >
-                                    No customers found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="sort" className="sr-only">Sort</label>
+          <select
+            id="sort"
+            onChange={(e) => handleSortChange(e.target.value)}
+            value={selectedSort}
+            className="border border-gray-300 rounded-md text-sm px-3 py-2"
+          >
+            <option value="asc">Sort: Ascending (A→Z)</option>
+            <option value="desc">Sort: Descending (Z→A)</option>
+          </select>
+        </div>
 
-            {/* Pagination */}
-            <div className="flex justify-between items-center flex-wrap gap-4 mt-4">
-                <div className="text-sm text-gray-600">
-                    Showing <strong>{users?.to}</strong> of{" "}
-                    <strong>{users?.total}</strong>
-                </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <label htmlFor="search" className="sr-only">Search customers</label>
+          <input
+            id="search"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => handleSearchTermChange(e.target.value)}
+            placeholder="Search by name, email, or username…"
+            className="w-full md:w-[300px] border border-gray-300 rounded-md text-sm px-3 py-2"
+            autoComplete="off"
+          />
+          {isLoading ? (
+            <span className="inline-flex items-center justify-center border border-gray-300 py-2 px-2.5 rounded-md text-gray-500">
+              <Loader2 className="w-4 h-4 animate-spin" />
+            </span>
+          ) : (
+            <span className="inline-flex items-center justify-center border border-gray-200 py-2 px-2.5 rounded-md text-gray-400">
+              <Download className="w-4 h-4 opacity-0" /> {/* spacer to keep layout steady */}
+            </span>
+          )}
+        </div>
+      </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex gap-2">
-                        {users?.links.map((link, idx) =>
-                            link.url ? (
-                                <Link
-                                    key={idx}
-                                    href={link.url}
-                                    className={`px-3 py-2 rounded-md text-sm border transition ${
-                                        link.active
-                                            ? "bg-primary text-white font-semibold"
-                                            : "bg-white text-gray-600 hover:bg-gray-100"
-                                    }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ) : (
-                                <span
-                                    key={idx}
-                                    className="px-3 py-2 text-sm text-gray-400 bg-white border rounded-md cursor-not-allowed"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            )
-                        )}
-                    </div>
+      {/* Table */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[60vh] bg-white rounded-lg ring-1 ring-gray-200">
+        <table className="min-w-full text-gray-800">
+          <thead className="bg-gray-50 text-sm text-gray-600 uppercase tracking-wide sticky top-0 z-10">
+            <tr className="[&>th]:p-3 [&>th]:text-left">
+              <th className="min-w-[60px]">ID</th>
+              <th>Last Name</th>
+              <th>First Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th className="text-center">Action</th>
+            </tr>
+          </thead>
 
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                        Per Page:
-                        <select
-                            id="page_item"
-                            value={itemsPerPage}
-                            onChange={(e) => handlePerPageChange(e.target.value)}
-                            className="border border-gray-300 rounded-md text-sm px-4 py-2"
+          <tbody className="divide-y divide-gray-100">
+            {users?.data?.length ? (
+              users.data.map((user) => {
+                const roleTone =
+                  user?.role?.toLowerCase() === "admin" ? "blue" :
+                  user?.role?.toLowerCase() === "agent" ? "amber" : "gray";
+                const statusTone =
+                  user?.status?.toLowerCase() === "active" ? "green" :
+                  user?.status?.toLowerCase() === "banned" ? "red" : "gray";
+
+                return (
+                  <tr key={user.id} className="hover:bg-gray-50/70">
+                    <td className="p-3">{user?.id ?? "—"}</td>
+                    <td className="p-3">{user?.customer?.last_name ?? "—"}</td>
+                    <td className="p-3">{user?.customer?.first_name ?? "—"}</td>
+                    <td className="p-3">{user?.username ?? "—"}</td>
+                    <td className="p-3">{user?.email ?? "—"}</td>
+                    <td className="p-3">{user?.phone_number ?? "—"}</td>
+                    <td className="p-3">
+                      <Badge tone={roleTone}>{user?.role ?? "—"}</Badge>
+                    </td>
+                    <td className="p-3">
+                      <Badge tone={statusTone}>{user?.status ?? "—"}</Badge>
+                    </td>
+                    <td className="p-3 whitespace-nowrap">{fmtDate(user?.created_at)}</td>
+                    <td className="p-3">
+                      <div className="flex items-center justify-center">
+                        <Link
+                          href={`/admin/customers/${user.id}/edit`}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-md px-2 py-1"
+                          aria-label={`Edit customer ${user?.username || user?.id}`}
                         >
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </AuthenticatedLayout>
-    );
+                          <SquarePen className="w-4 h-4" />
+                          <span className="sr-only">Edit</span>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td className="p-8 text-center text-gray-500" colSpan={10}>
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="font-medium">No customers found</p>
+                    <p className="text-sm">Try adjusting filters or add a new customer.</p>
+                    <Link
+                      href="/admin/customers/create"
+                      className="mt-2 inline-flex items-center rounded-md bg-emerald-600 text-white px-3 py-2 text-sm hover:bg-emerald-700 transition"
+                    >
+                      Add New Customer
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination + Per Page */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4">
+        <div className="text-sm text-gray-600">
+          Showing <strong>{users?.to ?? 0}</strong> of <strong>{users?.total ?? 0}</strong>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Links */}
+          <div className="flex flex-wrap gap-2">
+            {users?.links?.map((link, idx) =>
+              link.url ? (
+                <Link
+                  key={idx}
+                  href={link.url}
+                  className={`px-3 py-2 rounded-md text-sm border transition ${link.active ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-700 hover:bg-gray-50"}`}
+                  dangerouslySetInnerHTML={{ __html: link.label }}
+                  preserveScroll
+                />
+              ) : (
+                <span
+                  key={idx}
+                  className="px-3 py-2 text-sm text-gray-400 bg-white border rounded-md cursor-not-allowed"
+                  dangerouslySetInnerHTML={{ __html: link.label }}
+                />
+              )
+            )}
+          </div>
+
+          {/* Per page */}
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <label htmlFor="page_item">Per Page:</label>
+            <select
+              id="page_item"
+              value={itemsPerPage}
+              onChange={(e) => handlePerPageChange(e.target.value)}
+              className="border border-gray-300 rounded-md text-sm px-3 py-2"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </AuthenticatedLayout>
+  );
 }

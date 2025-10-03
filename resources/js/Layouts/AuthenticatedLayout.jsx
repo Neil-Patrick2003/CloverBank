@@ -17,7 +17,7 @@ export default function AuthenticatedLayout({ children, header }) {
           <Sidebar>
             <SidebarItem icon={<Home />} url={'/dashboard'} text="Home" active />
             <SidebarItem icon={<Users />} url={'/admin/customers'} text="Customer Management" />
-            <SidebarItem icon={<UserRoundCog />} url={'/users'} text="Account Management"  />
+            <SidebarItem icon={<UserRoundCog />} url={'/admin/accounts'} text="Account Management"  />
             <SidebarItem icon={<ArrowRightLeft />} url={'/transactions'}text="Transaction Management"  />
             <SidebarItem icon={<HandCoins />} url={'/paymenst'} text="Payments & Settlements"  />
             <SidebarItem icon={<Handshake />} url={'/loans'} text="Loan & Credit Management"  />
