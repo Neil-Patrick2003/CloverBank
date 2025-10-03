@@ -15,15 +15,15 @@ export default function AuthenticatedLayout({ children, header }) {
         {/* Sidebar for desktop */}
         <div className="hidden md:block">
           <Sidebar>
-            <SidebarItem icon={<Home />} text="Home" active />
-            <SidebarItem icon={<Users />} text="Customer Management" />
-            <SidebarItem icon={<UserRoundCog />} text="Account Management"  />
-            <SidebarItem icon={<ArrowRightLeft />} text="Transaction Management"  />
-            <SidebarItem icon={<HandCoins />} text="Payments & Settlements"  />
-            <SidebarItem icon={<Handshake />} text="Loan & Credit Management"  />
-            <SidebarItem icon={<Handshake />} text="Security & Compliance"  />
-            <SidebarItem icon={<User />} text="Report & Analytics"  />
-            <SidebarItem icon={<Settings />} text="System Administration"  />
+            <SidebarItem icon={<Home />} url={'/dashboard'} text="Home" active />
+            <SidebarItem icon={<Users />} url={'/admin/customers'} text="Customer Management" />
+            <SidebarItem icon={<UserRoundCog />} url={'/users'} text="Account Management"  />
+            <SidebarItem icon={<ArrowRightLeft />} url={'/transactions'}text="Transaction Management"  />
+            <SidebarItem icon={<HandCoins />} url={'/paymenst'} text="Payments & Settlements"  />
+            <SidebarItem icon={<Handshake />} url={'/loans'} text="Loan & Credit Management"  />
+            <SidebarItem icon={<Handshake />} url={'/security'} text="Security & Compliance"  />
+            <SidebarItem icon={<User />} url={'/report'} text="Report & Analytics"  />
+            <SidebarItem icon={<Settings />} url={'/settings'} text="System Administration"  />
           </Sidebar>
         </div>
 
@@ -37,7 +37,7 @@ export default function AuthenticatedLayout({ children, header }) {
 
         {/* Mobile sidebar (drawer) */}
         <div
-          className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 md:hidden ${
+          className={`fixed top-0 left-0 h-full w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 md:hidden ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -90,7 +90,7 @@ export default function AuthenticatedLayout({ children, header }) {
           </div>
 
           {/* Page Content */}
-            <div className="p-6">
+            <div className="h-screen overflow-auto p-6 bg-gray-50">
                 {children}
             </div>
 
